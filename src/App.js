@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Moveable from "react-moveable";
+import './styles.css';
 
 const App = () => {
   const [moveableComponents, setMoveableComponents] = useState([]);
@@ -9,10 +10,7 @@ const App = () => {
   useEffect(() => {
     fetch("https://jsonplaceholder.typicode.com/photos")
       .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setImages(data)
-      })
+      .then((data) => setImages(data))
   }, [])
 
   const addMoveable = () => {
@@ -33,7 +31,19 @@ const App = () => {
     ]);
   };
 
+  let parent = document.getElementById("parent");
+  let parentBounds = parent?.getBoundingClientRect();
+  // console.log(parentBounds);
+
   const updateMoveable = (id, newComponent, updateEnd = false) => {
+    console.log(newComponent);
+    if (
+      newComponent.top < 0 ||
+      newComponent.left < 0 ||
+      newComponent.top + newComponent.height > parentBounds?.height ||
+      newComponent.left + newComponent.width > parentBounds?.width
+    ) return;
+
     const updatedMoveables = moveableComponents.map((moveable, i) => {
       if (moveable.id === id) {
         return { id, ...newComponent, updateEnd };
@@ -122,16 +132,19 @@ const Component = ({
 
   let parent = document.getElementById("parent");
   let parentBounds = parent?.getBoundingClientRect();
-  // console.log(parentBounds);
   
   const onResize = async (e) => {
-    // console.log(e.clientX, e.clientY);
-
-    // console.log(parent);
+    if (
+      e.clientY > parentBounds?.bottom || 
+      e.clientY < parentBounds?.top || 
+      e.clientX > parentBounds?.right ||
+      e.clientX < parentBounds?.left
+    ) return;
 
     // ACTUALIZAR ALTO Y ANCHO
     let newWidth = e.width;
     let newHeight = e.height;
+
 
     const positionMaxTop = top + newHeight;
     const positionMaxLeft = left + newWidth;
@@ -141,12 +154,10 @@ const Component = ({
     if (positionMaxLeft > parentBounds?.width)
       newWidth = parentBounds?.width - left;
 
-    if (
-      e.clientY > parentBounds?.bottom || 
-      e.clientY < parentBounds?.top || 
-      e.clientX > parentBounds?.right ||
-      e.clientX < parentBounds?.left
-    ) return;
+    // const upDir = [0, -1];
+    // const rightDir = [1, 0];
+    // const downDir = [0, 1];
+    // const leftDir = [-1, 0];
 
     updateMoveable(id, {
       top,
@@ -164,7 +175,6 @@ const Component = ({
 
     let translateX = beforeTranslate[0];
     let translateY = beforeTranslate[1];
-    // console.log(beforeTranslate)
 
     ref.current.style.transform = `translate(${translateX}px, ${translateY}px)`;
 
@@ -219,6 +229,7 @@ const Component = ({
           height: height,
           // background: color,
           backgroundImage: `url(${image.url})`,
+          backgroundSize: width > height ? "cover" : "contain"
         }}
         onClick={() => setSelected(id)}
       />

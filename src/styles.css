@@ -22,3 +22,7 @@
   border: none;
   font-size: 8px;
 }
+
+.draggable {
+  background-size: contain;
+}
